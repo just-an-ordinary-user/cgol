@@ -13,5 +13,5 @@ if (root) {
   root.appendChild(cnv);
   const ctx = cnv.getContext("2d");
 
-  ctx && game({ ctx, width: CNV_WIDTH, height: CNV_HEIGHT });
+  ctx && game({ ctx, cnv, width: CNV_WIDTH, height: CNV_HEIGHT });
 }

@@ -1,5 +1,6 @@
 type TMainArgs = {
   ctx: CanvasRenderingContext2D;
+  cnv: HTMLCanvasElement;
   width: number;
   height: number;
 };
@@ -132,7 +133,7 @@ function init_board() {
   board[BOARD_ROWS - 4][BOARD_COLS - 2] = true;
 }
 
-export function game({ ctx, width, height }: TMainArgs) {
+export function game({ ctx, cnv, width, height }: TMainArgs) {
   ctx.translate(0.5, 0.5); // fix line smoothness
 
   init_board();
@@ -151,5 +152,17 @@ export function game({ ctx, width, height }: TMainArgs) {
     if (ev.key === " ") {
       is_paused = !is_paused;
     }
+  });
+
+  cnv.addEventListener("click", (ev) => {
+    const clickX = ev.clientX - cnv.offsetLeft;
+    const clickY = ev.clientY - cnv.offsetTop;
+
+    const x = Math.floor(clickX / CELL_SIZE);
+    const y = Math.floor(clickY / CELL_SIZE);
+
+    board[y][x] = true;
+
+    draw_board(ctx, width, height);
   });
 }
