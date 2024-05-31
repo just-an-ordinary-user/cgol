@@ -8,3 +8,10 @@
 $ npm i
 $ npm run dev
 ```
+
+## Change implementation to AssemblyScript
+
+- Run `npm run build asbuild`
+- Open `src/amin`
+- Change `const IMPL: TImpl = "ts";` to `const IMPL: TImpl = "asm-ts";`
+- Run `npm run dev` or it will automatically reload if it's already done

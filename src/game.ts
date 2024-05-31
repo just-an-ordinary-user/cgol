@@ -1,3 +1,5 @@
+import { fill_rect, stroke_rect } from "./bindings";
+
 type TMainArgs = {
   ctx: CanvasRenderingContext2D;
   cnv: HTMLCanvasElement;
@@ -75,33 +77,37 @@ function calc_board(): void {
   flip_board();
 }
 
-function draw_board(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-) {
-  ctx.fillStyle = BG_COLOR;
-  ctx.fillRect(0, 0, width, height);
+function draw_board(width: number, height: number) {
+  fill_rect(0, 0, width, height, BG_COLOR);
 
   for (let y = 0; y < BOARD_ROWS; ++y) {
     for (let x = 0; x < BOARD_COLS; ++x) {
       if (board[y][x]) {
-        ctx.fillStyle = LIVE_CELL_COLOR;
-      } else {
-        ctx.fillStyle = DEAD_CELL_COLOR;
-      }
-      if (ENABLE_GRID) {
-        ctx.strokeStyle = GRID_COLOR;
-        ctx.lineWidth = GRID_THICK;
-        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        ctx.fillRect(
+        fill_rect(
           x * CELL_SIZE + GRID_THICK,
           y * CELL_SIZE + GRID_THICK,
           CELL_SIZE - GRID_THICK * 2,
           CELL_SIZE - GRID_THICK * 2,
+          LIVE_CELL_COLOR,
         );
       } else {
-        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        fill_rect(
+          x * CELL_SIZE + GRID_THICK,
+          y * CELL_SIZE + GRID_THICK,
+          CELL_SIZE - GRID_THICK * 2,
+          CELL_SIZE - GRID_THICK * 2,
+          DEAD_CELL_COLOR,
+        );
+      }
+      if (ENABLE_GRID) {
+        stroke_rect(
+          x * CELL_SIZE,
+          y * CELL_SIZE,
+          CELL_SIZE,
+          CELL_SIZE,
+          GRID_COLOR,
+          GRID_THICK,
+        );
       }
     }
   }
@@ -133,16 +139,16 @@ function init_board() {
   board[BOARD_ROWS - 4][BOARD_COLS - 2] = true;
 }
 
-export function game({ ctx, cnv, width, height }: TMainArgs) {
+export function game_ts({ ctx, cnv, width, height }: TMainArgs) {
   ctx.translate(0.5, 0.5); // fix line smoothness
 
   init_board();
 
-  draw_board(ctx, width, height);
+  draw_board(width, height);
 
   setInterval(() => {
     if (!is_paused) {
-      draw_board(ctx, width, height);
+      draw_board(width, height);
 
       calc_board();
     }
@@ -163,6 +169,6 @@ export function game({ ctx, cnv, width, height }: TMainArgs) {
 
     board[y][x] = true;
 
-    draw_board(ctx, width, height);
+    draw_board(width, height);
   });
 }
