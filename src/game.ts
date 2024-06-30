@@ -1,8 +1,7 @@
-import { fill_rect, stroke_rect } from "./bindings";
+import { draw_line, fill_rect } from "./bindings";
 
 type TMainArgs = {
   ctx: CanvasRenderingContext2D;
-  cnv: HTMLCanvasElement;
   width: number;
   height: number;
 };
@@ -16,11 +15,11 @@ const GRID_COLOR = "#000000";
 const CELL_SIZE = 20;
 const LIVE_CELL_COLOR = "#000000";
 const DEAD_CELL_COLOR = "#ffffff";
-const BG_COLOR = "#ffffff";
-
 const RATE = 100;
 
 let is_paused = true;
+let lastFrameTime = 0;
+let accumulatedTime = 0;
 
 type TField = boolean[][];
 
@@ -77,39 +76,35 @@ function calc_board(): void {
   flip_board();
 }
 
+function draw_grid(width: number, height: number) {
+  for (let y = 0; y < height; y += CELL_SIZE) {
+    draw_line(0, y, width, y, GRID_COLOR, GRID_THICK);
+  }
+  for (let x = 0; x < width; x += CELL_SIZE) {
+    draw_line(x, 0, x, height, GRID_COLOR, GRID_THICK);
+  }
+}
+
 function draw_board(width: number, height: number) {
-  fill_rect(0, 0, width, height, BG_COLOR);
+  fill_rect(0, 0, width, height, DEAD_CELL_COLOR);
 
   for (let y = 0; y < BOARD_ROWS; ++y) {
     for (let x = 0; x < BOARD_COLS; ++x) {
       if (board[y][x]) {
+        const gridThick = ENABLE_GRID ? GRID_THICK : 0;
         fill_rect(
-          x * CELL_SIZE + GRID_THICK,
-          y * CELL_SIZE + GRID_THICK,
-          CELL_SIZE - GRID_THICK * 2,
-          CELL_SIZE - GRID_THICK * 2,
+          x * CELL_SIZE + gridThick,
+          y * CELL_SIZE + gridThick,
+          CELL_SIZE - gridThick,
+          CELL_SIZE - gridThick,
           LIVE_CELL_COLOR,
-        );
-      } else {
-        fill_rect(
-          x * CELL_SIZE + GRID_THICK,
-          y * CELL_SIZE + GRID_THICK,
-          CELL_SIZE - GRID_THICK * 2,
-          CELL_SIZE - GRID_THICK * 2,
-          DEAD_CELL_COLOR,
-        );
-      }
-      if (ENABLE_GRID) {
-        stroke_rect(
-          x * CELL_SIZE,
-          y * CELL_SIZE,
-          CELL_SIZE,
-          CELL_SIZE,
-          GRID_COLOR,
-          GRID_THICK,
         );
       }
     }
+  }
+
+  if (ENABLE_GRID) {
+    draw_grid(width, height);
   }
 }
 
@@ -139,20 +134,45 @@ function init_board() {
   board[BOARD_ROWS - 4][BOARD_COLS - 2] = true;
 }
 
-export function game_ts({ ctx, cnv, width, height }: TMainArgs) {
-  ctx.translate(0.5, 0.5); // fix line smoothness
+function render_fps(ctx: CanvasRenderingContext2D, fps: number, width: number) {
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(width / 2 - 40, 0, 80, 25);
+  ctx.font = "16px monospace";
+  ctx.fillStyle = "#000000";
+  ctx.fillText(`FPS: ${Math.floor(fps)}`, width / 2 - 33, 20);
+}
+
+function render(
+  ctx: CanvasRenderingContext2D,
+  stamp: number,
+  width: number,
+  height: number,
+) {
+  const deltaTime = stamp - lastFrameTime;
+  lastFrameTime = stamp;
+  accumulatedTime += deltaTime;
+
+  if (accumulatedTime >= RATE) {
+    if (!is_paused) {
+      draw_board(width, height);
+      calc_board();
+    }
+    render_fps(ctx, 1000 / deltaTime, width);
+
+    accumulatedTime %= RATE;
+  }
+
+  requestAnimationFrame((stamp) => render(ctx, stamp, width, height));
+}
+
+export function game_ts({ ctx, width, height }: TMainArgs) {
+  const cnv = ctx.canvas;
 
   init_board();
 
   draw_board(width, height);
 
-  setInterval(() => {
-    if (!is_paused) {
-      draw_board(width, height);
-
-      calc_board();
-    }
-  }, RATE);
+  render(ctx, 0, width, height);
 
   document.addEventListener("keypress", (ev) => {
     if (ev.key === " ") {
@@ -167,7 +187,7 @@ export function game_ts({ ctx, cnv, width, height }: TMainArgs) {
     const x = Math.floor(clickX / CELL_SIZE);
     const y = Math.floor(clickY / CELL_SIZE);
 
-    board[y][x] = true;
+    board[y][x] = !board[y][x];
 
     draw_board(width, height);
   });

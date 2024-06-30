@@ -7,18 +7,18 @@ const CNV_HEIGHT = 480;
 
 const IMPL: TImpl = "ts";
 
-function render(
-  impl: TImpl,
-  ctx: CanvasRenderingContext2D,
-  cnv: HTMLCanvasElement,
-) {
+function render(impl: TImpl, ctx: CanvasRenderingContext2D) {
   if (ctx) {
     switch (impl) {
       case "ts":
-        game_ts({ ctx, cnv, width: CNV_WIDTH, height: CNV_HEIGHT });
+        game_ts({ ctx, width: CNV_WIDTH, height: CNV_HEIGHT });
         break;
       case "asm-ts":
-        game_asm({ ctx, cnv, width: CNV_WIDTH, height: CNV_HEIGHT });
+        game_asm({
+          ctx,
+          width: CNV_WIDTH,
+          height: CNV_HEIGHT,
+        });
         break;
       default:
         throw "Unreachable";
@@ -37,6 +37,6 @@ if (root) {
     root.appendChild(cnv);
     const ctx_ts = cnv.getContext("2d");
 
-    ctx_ts && render(IMPL, ctx_ts, cnv);
+    ctx_ts && render(IMPL, ctx_ts);
   }
 }

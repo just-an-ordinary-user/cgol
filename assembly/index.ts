@@ -4,8 +4,16 @@ import {
   init_board,
   frame,
   set_on_board,
+  get_from_board,
   calc_board,
   draw_board,
 } from "./game";
 
-export { init_board, frame, set_on_board, calc_board, draw_board };
+export {
+  init_board,
+  frame,
+  set_on_board,
+  get_from_board,
+  calc_board,
+  draw_board,
+};

@@ -17,18 +17,27 @@ declare function stroke_rect(
   line_width: number,
 ): void;
 
+@external("../src/bindings.ts", "draw_line")
+declare function draw_line(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  line_width: number,
+): void;
+
 type TField = bool[][];
 
 const BOARD_ROWS = 24;
 const BOARD_COLS = 32;
 const ENABLE_GRID = false;
-const GRID_THICK = 0;
+const GRID_THICK = 1;
 const GRID_COLOR = "#000000";
 
 const CELL_SIZE = 20;
-const LIVE_CELL_COLOR = "#ffffff";
-const DEAD_CELL_COLOR = "#000000";
-const BG_COLOR = "#000000";
+const LIVE_CELL_COLOR = "#000000";
+const DEAD_CELL_COLOR = "#ffffff";
 
 function make_board(rows: i32, cols: i32): bool[][] {
   const result = new Array<bool[]>(rows).fill([]);
@@ -121,44 +130,45 @@ export function init_board(): void {
   board[BOARD_ROWS - 4][BOARD_COLS - 2] = true;
 }
 
+function draw_grid(width: number, height: number): void {
+  for (let y = 0; y < height; y += CELL_SIZE) {
+    draw_line(0, y, width, y, GRID_COLOR, GRID_THICK);
+  }
+  for (let x = 0; x < width; x += CELL_SIZE) {
+    draw_line(x, 0, x, height, GRID_COLOR, GRID_THICK);
+  }
+}
+
 export function draw_board(width: number, height: number): void {
-  fill_rect(0, 0, width, height, BG_COLOR);
+  fill_rect(0, 0, width, height, DEAD_CELL_COLOR);
+
+  const gridThick = ENABLE_GRID ? GRID_THICK : 0;
 
   for (let y = 0; y < BOARD_ROWS; ++y) {
     for (let x = 0; x < BOARD_COLS; ++x) {
       if (board[y][x]) {
         fill_rect(
-          x * CELL_SIZE + GRID_THICK,
-          y * CELL_SIZE + GRID_THICK,
-          CELL_SIZE - GRID_THICK * 2,
-          CELL_SIZE - GRID_THICK * 2,
+          x * CELL_SIZE + gridThick,
+          y * CELL_SIZE + gridThick,
+          CELL_SIZE - gridThick,
+          CELL_SIZE - gridThick,
           LIVE_CELL_COLOR,
-        );
-      } else {
-        fill_rect(
-          x * CELL_SIZE + GRID_THICK,
-          y * CELL_SIZE + GRID_THICK,
-          CELL_SIZE - GRID_THICK * 2,
-          CELL_SIZE - GRID_THICK * 2,
-          DEAD_CELL_COLOR,
-        );
-      }
-      if (ENABLE_GRID) {
-        stroke_rect(
-          x * CELL_SIZE,
-          y * CELL_SIZE,
-          CELL_SIZE,
-          CELL_SIZE,
-          GRID_COLOR,
-          GRID_THICK,
         );
       }
     }
+  }
+
+  if (ENABLE_GRID) {
+    draw_grid(width, height);
   }
 }
 
 export function set_on_board(y: i32, x: i32, value: bool): void {
     board[y][x] = value;
+}
+
+export function get_from_board(y: i32, x: i32): bool {
+  return board[y][x];
 }
 
 export function frame(width: i32, height: i32): void {
